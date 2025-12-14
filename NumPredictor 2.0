@@ -1,0 +1,152 @@
+import pandas as pd
+import numpy as np
+from matplotlib import pyplot as plt
+
+# ==================== Load Data ====================
+df = pd.read_csv("housing_sample1.csv")  # Your CSV with Area, Bedrooms, Age, Price
+
+# Features and target
+X1 = df["Area"].values
+X2 = df["Bedrooms"].values
+X3 = df["Age"].values
+Y = df["Price"].values
+
+n = len(df)
+
+# ==================== Initialize Parameters ====================
+m1, m2, m3, b = 0, 0, 0, 0
+alpha = 0.0000001  # Learning rate
+epochs = 1000
+batch_size = 10
+
+# ==================== Track Loss and Parameters ====================
+loss_history = []
+m1_history, m2_history, m3_history, b_history = [], [], [], []
+
+# ==================== Gradient Descent ====================
+for epoch in range(epochs):
+    # Shuffle dataset
+    indices = np.arange(n)
+    np.random.shuffle(indices)
+    X1_shuffled = X1[indices]
+    X2_shuffled = X2[indices]
+    X3_shuffled = X3[indices]
+    Y_shuffled = Y[indices]
+
+    # Mini-batch gradient descent
+    for i in range(0, n, batch_size):
+        X1_batch = X1_shuffled[i:i+batch_size]
+        X2_batch = X2_shuffled[i:i+batch_size]
+        X3_batch = X3_shuffled[i:i+batch_size]
+        Y_batch = Y_shuffled[i:i+batch_size]
+        batch_n = len(X1_batch)
+
+        # Predictions
+        Y_pred_batch = m1*X1_batch + m2*X2_batch + m3*X3_batch + b
+
+        # Errors
+        error_batch = Y_pred_batch - Y_batch
+
+        # Gradients
+        gradient_m1 = (2/batch_n) * np.sum(error_batch * X1_batch)
+        gradient_m2 = (2/batch_n) * np.sum(error_batch * X2_batch)
+        gradient_m3 = (2/batch_n) * np.sum(error_batch * X3_batch)
+        gradient_b = (2/batch_n) * np.sum(error_batch)
+
+        # Update parameters
+        m1 -= alpha * gradient_m1
+        m2 -= alpha * gradient_m2
+        m3 -= alpha * gradient_m3
+        b -= alpha * gradient_b
+
+    # Track total loss on full dataset
+    Y_pred_total = m1*X1 + m2*X2 + m3*X3 + b
+    loss = np.mean((Y_pred_total - Y)**2)
+    loss_history.append(loss)
+    m1_history.append(m1)
+    m2_history.append(m2)
+    m3_history.append(m3)
+    b_history.append(b)
+
+    # Print every 100 epochs
+    if epoch % 100 == 0:
+        print(f"Epoch {epoch}: Loss={loss:.4f}, m1={m1:.6f}, m2={m2:.6f}, m3={m3:.6f}, b={b:.6f}")
+
+# ==================== Final Predictions and Metrics ====================
+df["Predicted_Price"] = m1*X1 + m2*X2 + m3*X3 + b
+MSE = np.mean((df["Predicted_Price"] - Y)**2)
+RMSE = np.sqrt(MSE)
+MAE = np.mean(np.abs(df["Predicted_Price"] - Y))
+
+print("="*80)
+print(f"Training Completed after {epochs} epochs")
+print(f"Final Parameters: m1={m1:.6f}, m2={m2:.6f}, m3={m3:.6f}, b={b:.6f}")
+print(f"MSE={MSE:.4f}, RMSE={RMSE:.4f}, MAE={MAE:.4f}")
+print("="*80)
+
+# ==================== Visualization ====================
+plt.figure(figsize=(18,10))
+
+# Loss over epochs
+plt.subplot(2, 3, 1)
+plt.plot(loss_history, color="blue")
+plt.title("Loss over Epochs")
+plt.xlabel("Epoch")
+plt.ylabel("MSE Loss")
+plt.grid(True)
+
+# Parameters over epochs
+plt.subplot(2, 3, 2)
+plt.plot(m1_history, label="m1 (Area)")
+plt.plot(m2_history, label="m2 (Bedrooms)")
+plt.plot(m3_history, label="m3 (Age)")
+plt.plot(b_history, label="b (Bias)")
+plt.title("Parameters over Epochs")
+plt.xlabel("Epoch")
+plt.ylabel("Value")
+plt.legend()
+plt.grid(True)
+
+# Actual vs Predicted Price (Area)
+plt.subplot(2, 3, 3)
+plt.scatter(df["Area"], Y, label="Actual", color="red", alpha=0.5)
+plt.scatter(df["Area"], df["Predicted_Price"], label="Predicted", color="green", alpha=0.5)
+plt.title("Actual vs Predicted (Area)")
+plt.xlabel("Area")
+plt.ylabel("Price")
+plt.legend()
+plt.grid(True)
+
+# Actual vs Predicted Price (Scatter)
+plt.subplot(2, 3, 4)
+plt.scatter(Y, df["Predicted_Price"], alpha=0.6)
+plt.plot([Y.min(), Y.max()], [Y.min(), Y.max()], color="red", linestyle="--", label="Perfect Prediction")
+plt.title("Actual vs Predicted Price")
+plt.xlabel("Actual Price")
+plt.ylabel("Predicted Price")
+plt.legend()
+plt.grid(True)
+
+# Residuals
+plt.subplot(2, 3, 5)
+residuals = Y - df["Predicted_Price"]
+plt.scatter(df["Predicted_Price"], residuals, alpha=0.6)
+plt.axhline(y=0, color="red", linestyle="--")
+plt.title("Residual Plot")
+plt.xlabel("Predicted Price")
+plt.ylabel("Residuals")
+plt.grid(True)
+
+# Comparison: Initial vs Final Prediction
+plt.subplot(2, 3, 6)
+plt.scatter(df["Area"], Y, label="Actual", color="red", alpha=0.3)
+plt.plot(df["Area"], df["Predicted_Price"], label="Final Prediction", color="blue", linewidth=2)
+plt.title("Final Predictions")
+plt.xlabel("Area")
+plt.ylabel("Price")
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+
