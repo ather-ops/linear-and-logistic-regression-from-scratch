@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # ==================== Load Data ====================
-df = pd.read_csv("housing_sample1.csv")  # Your CSV with Area, Bedrooms, Age, Price
+df = pd.read_csv("housing_sample1.csv")  
 
 # Features and target
 X1 = df["Area"].values
@@ -149,4 +149,5 @@ plt.grid(True)
 
 plt.tight_layout()
 plt.show()
+
 
