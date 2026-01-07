@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # -----------------------------
 # Load Dataset
 # -----------------------------
-df = pd.read_csv("student_scores_csv.txt")
+df = pd.read_csv("student_scores_csv")
 print("Original Data:")
 print(df.head())
 print("=" * 80)
@@ -92,3 +92,4 @@ attendance /= df["attendance"].max()
 predicted_score = m1*study + m2*sleep + m3*attendance + b
 print("=" * 80)
 print(f"Predicted Final Score: {predicted_score:.2f}")
+
